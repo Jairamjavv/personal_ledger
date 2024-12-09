@@ -1,19 +1,36 @@
 import React from "react";
-import { Form, Input, Button, Select, Typography, theme } from "antd";
+import {
+    Form,
+    Input,
+    Button,
+    Select,
+    Typography,
+    theme,
+    Table,
+    Tabs,
+} from "antd";
+
+import {
+    useGetAccountsQuery,
+    useCreateAccountMutation,
+} from "../services/accountsApi";
 
 const { Option } = Select;
 const { Title } = Typography;
 
+interface Account {
+    id: number;
+    account_name: string;
+    account_type: string;
+    account_balance: number;
+}
+
 const AccountComponent: React.FC = () => {
     const [form] = Form.useForm();
     const { token } = theme.useToken();
+    const { data: accounts, refetch } = useGetAccountsQuery({});
 
-    const onSubmit = (values: unknown) => {
-        console.log("Received values of form:", values);
-        // Here you would typically send this data to an API or handle it in state
-        alert(`Form submitted successfully ${JSON.stringify(values)}`);
-    };
-    return (
+    const NewAccountForm = () => (
         <div
             style={{
                 padding: 24,
@@ -50,7 +67,7 @@ const AccountComponent: React.FC = () => {
                             Account Name
                         </span>
                     }
-                    name="accountName"
+                    name="account_name"
                     rules={[
                         {
                             required: true,
@@ -67,7 +84,7 @@ const AccountComponent: React.FC = () => {
                             Account Type
                         </span>
                     }
-                    name="accountType"
+                    name="account_type"
                     rules={[
                         {
                             required: true,
@@ -91,7 +108,7 @@ const AccountComponent: React.FC = () => {
                             Account Balance
                         </span>
                     }
-                    name="accountBalance"
+                    name="account_balance"
                     rules={[
                         {
                             required: true,
@@ -115,6 +132,68 @@ const AccountComponent: React.FC = () => {
                     </Button>
                 </Form.Item>
             </Form>
+        </div>
+    );
+
+    const AccountsList = () => (
+        <Table
+            dataSource={accounts}
+            columns={[
+                {
+                    title: "Account Name",
+                    dataIndex: "account_name",
+                    key: "account_name",
+                },
+                {
+                    title: "Account Type",
+                    dataIndex: "account_type",
+                    key: "account_type",
+                },
+                {
+                    title: "Balance",
+                    dataIndex: "account_balance",
+                    key: "account_balance",
+                    render: (balance) => `₹${balance}`,
+                },
+            ]}
+        />
+    );
+
+    const [updateAccounts] = useCreateAccountMutation();
+
+    const onSubmit = (values: Account) => {
+        console.log("Received values of form:", values);
+        // Here you would typically send this data to an API or handle it in state
+        updateAccounts(values);
+    };
+    return (
+        <div
+            style={{
+                padding: 24,
+                backgroundColor: token.colorBgContainer,
+                color: token.colorText,
+            }}
+        >
+            <Tabs
+                defaultActiveKey="1"
+                onChange={(tabkey: string) => {
+                    if (tabkey === "1") {
+                        refetch();
+                    }
+                }}
+                items={[
+                    {
+                        key: "1",
+                        label: "All Accounts",
+                        children: <AccountsList />,
+                    },
+                    {
+                        key: "2",
+                        label: "New Account",
+                        children: <NewAccountForm />,
+                    },
+                ]}
+            />
         </div>
     );
 };

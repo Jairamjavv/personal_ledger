@@ -1,41 +1,46 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const transactionApi = createApi({
-    reducerPath: 'transactionApi',
+    reducerPath: "transactionApi",
     baseQuery: fetchBaseQuery({
         baseUrl: "http://localhost:8000/",
     }),
     endpoints: (builder) => ({
         // GET api's
-        // getAccounts: builder.query({
-        //     query: () => "/accounts",
-        // }),
         getTransactions: builder.query({
             query: () => "transaction",
         }),
-        // getCategories: builder.query({
-        //     query: () => "/categories",
-        // }),
-        // getSubCategories: builder.query({
-        //     query: () => "/sub-categories",
-        // }),
 
         // POST api's
-        createAccount: builder.mutation({
-            query: () => "/accounts",
+        createTransaction: builder.mutation({
+            query: (transaction_object) => ({
+                url: "transaction",
+                method: "POST",
+                body: transaction_object,
+            }),
         }),
-        // createTransaction: builder.mutation({
-        //     query: () => "/account",
-        // }),
 
         // DELETE api's
         deleteTransaction: builder.mutation({
-            query: () => "/transaction",
+            query: (transaction_id) => ({
+                url: `transaction/${transaction_id}`,
+                method: "DELETE",
+            }),
         }),
-        // deleteAccount: builder.mutation({
-        //     query: () => '/account'
-        // })
+
+        // PATCH api's
+        updateTransaction: builder.mutation({
+            query: (transaction_id) => ({
+                url: `transaction/${transaction_id}`,
+                method: "UPDATE",
+            }),
+        }),
     }),
 });
 
-export const { useGetTransactionsQuery, useCreateAccountMutation } = transactionApi;
+export const {
+    useGetTransactionsQuery,
+    useCreateTransactionMutation,
+    useDeleteTransactionMutation,
+    useUpdateTransactionMutation,
+} = transactionApi;

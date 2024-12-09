@@ -268,6 +268,7 @@ class AccountHelper:
             except Exception as e:
                 db.rollback()
                 print(e)
+                return {"message": f"Accounts not found. {e}"}
 
     def get_account(self, account_id: int):
         with next(get_db()) as db:
@@ -277,10 +278,11 @@ class AccountHelper:
                     .filter(AccountsModel.id == account_id)
                     .first()
                 )
-                print(account)
+                return account
             except Exception as e:
                 db.rollback()
                 print(e)
+                return {"message": f"Account not found. {e}"}
 
     def update_account(self, account_id: int, update_account: Account):
         with next(get_db()) as db:
@@ -297,12 +299,15 @@ class AccountHelper:
             except Exception as e:
                 db.rollback()
                 print(e)
+                return {"message": f"Account not updated. {e}"}
 
     def delete_account(self, account_id):
         with next(get_db()) as db:
             try:
                 db.query(AccountsModel).filter(AccountsModel.id == account_id).delete()
                 db.commit()
+                return {"message": "Account deleted successfully"}
             except Exception as e:
                 db.rollback()
                 print(e)
+                return {"message": f"Account not deleted. {e}"}

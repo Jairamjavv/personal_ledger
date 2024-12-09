@@ -18,7 +18,7 @@ def get_transaction():
     return response
 
 
-@router.put("/transaction")
+@router.post("/transaction")
 def create_transaction(transaction: Transaction):
     transaction_helper = TransactionHelper()
     response = transaction_helper.create_transaction(transaction)
@@ -39,8 +39,21 @@ def update_transaction(transaction_id: int, transaction: Transaction):
     return response
 
 
-@router.put("/account")
+@router.get("/account")
+def get_accounts():
+    account_helper = AccountHelper()
+    response = account_helper.get_accounts()
+    return response
+
+
+@router.post("/account")
 def add_account(account: Account):
     account_helper = AccountHelper()
     response = account_helper.create_account(account)
+    return response
+
+@router.delete("/account/{account_id}")
+def delete_account(account_id: int):
+    account_helper = AccountHelper()
+    response = account_helper.delete_account(account_id)
     return response

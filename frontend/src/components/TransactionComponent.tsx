@@ -1,4 +1,5 @@
 import React from "react";
+import dayjs from "dayjs";
 import {
     Form,
     Input,
@@ -14,12 +15,27 @@ import {
 } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 
-import { useGetTransactionsQuery } from "../services/transactionApi";
-import { Store } from "@reduxjs/toolkit";
+import {
+    useGetTransactionsQuery,
+    useCreateTransactionMutation,
+} from "../services/transactionApi";
 
 const { Option } = Select;
 const { Title } = Typography;
 const { TextArea } = Input;
+
+interface Transaction {
+    id: number;
+    account: string;
+    category: string;
+    sub_category: string;
+    credit: number;
+    debit: number;
+    date: Date;
+    detail_description: string;
+    description: string;
+    mode: string;
+}
 
 const columns = [
     {
@@ -62,13 +78,22 @@ const TransactionComponent: React.FC = () => {
     const [isDeleteModalVisible, setIsDeleteModalVisible] =
         React.useState(false);
     const [selectedTransaction, setSelectedTransaction] =
-        React.useState<unknown>(null);
+        React.useState<Transaction>();
 
     const { data: transactionData } = useGetTransactionsQuery({});
-    console.log(transactionData);
+    const [createTransaction] = useCreateTransactionMutation();
 
-    const onSubmit = (values: unknown) => {
-        console.log("Transaction form values:", values);
+    const onSubmit = (values: Transaction) => {
+        const formattedValues = {
+            ...values,
+            date: dayjs(values.date).format("YYYY-MM-DD"),
+        };
+        console.log("Transaction form values:", formattedValues);
+    };
+
+    // FIXME: Add logic to update transaction
+    const handleOk = () => {
+        createTransaction();
     };
 
     // Code for new account creation
@@ -107,8 +132,9 @@ const TransactionComponent: React.FC = () => {
                     label={<span style={{ color: token.colorText }}>Date</span>}
                     name="date"
                     rules={[{ required: true, message: "Please select date!" }]}
+                    initialValue={dayjs()}
                 >
-                    <DatePicker style={{ width: "100%" }} />
+                    <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
                 </Form.Item>
 
                 <Form.Item
@@ -247,7 +273,7 @@ const TransactionComponent: React.FC = () => {
         {
             title: "Actions",
             key: "actions",
-            render: (_: unknown, record: unknown) => (
+            render: (_: unknown, record: Transaction) => (
                 <Space size="middle">
                     <Button
                         type="link"
@@ -276,18 +302,150 @@ const TransactionComponent: React.FC = () => {
             title="Edit Transaction"
             open={isEditModalVisible}
             onCancel={() => setIsEditModalVisible(false)}
-            footer={null}
+            // FIXME: Add logic to update transaction
+            onOk={handleOk}
         >
             <Form
                 form={form}
-                initialValues={selectedTransaction as Store}
+                initialValues={selectedTransaction as Transaction}
                 onFinish={() => {
                     // Handle update logic here
                     setIsEditModalVisible(false);
                 }}
             >
-                {/* Copy the same form fields from TransactionForm */}
-                {/* Update the form field values with selectedTransaction data */}
+                <Form.Item
+                    label={<span style={{ color: token.colorText }}>Date</span>}
+                    name="date"
+                    rules={[{ required: true, message: "Please select date!" }]}
+                    initialValue={dayjs()}
+                >
+                    <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
+                </Form.Item>
+
+                <Form.Item
+                    label={
+                        <span style={{ color: token.colorText }}>
+                            Description
+                        </span>
+                    }
+                    name="description"
+                    rules={[
+                        {
+                            required: true,
+                            message: "Please enter description!",
+                        },
+                    ]}
+                >
+                    <Input />
+                </Form.Item>
+
+                <Form.Item
+                    label={
+                        <span style={{ color: token.colorText }}>
+                            Detailed Description
+                        </span>
+                    }
+                    name="detail_description"
+                >
+                    <TextArea rows={4} />
+                </Form.Item>
+
+                <Form.Item
+                    label={
+                        <span style={{ color: token.colorText }}>
+                            Credit Amount
+                        </span>
+                    }
+                    name="credit"
+                >
+                    <Input type="number" prefix="₹" />
+                </Form.Item>
+
+                <Form.Item
+                    label={
+                        <span style={{ color: token.colorText }}>
+                            Debit Amount
+                        </span>
+                    }
+                    name="debit"
+                >
+                    <Input type="number" prefix="₹" />
+                </Form.Item>
+
+                <Form.Item
+                    label={
+                        <span style={{ color: token.colorText }}>Category</span>
+                    }
+                    name="category"
+                    rules={[
+                        { required: true, message: "Please select category!" },
+                    ]}
+                >
+                    <Select>
+                        <Option value="income">Income</Option>
+                        <Option value="expense">Expense</Option>
+                        <Option value="transfer">Transfer</Option>
+                    </Select>
+                </Form.Item>
+
+                <Form.Item
+                    label={
+                        <span style={{ color: token.colorText }}>
+                            Sub Category
+                        </span>
+                    }
+                    name="sub_category"
+                >
+                    <Select>
+                        <Option value="salary">Salary</Option>
+                        <Option value="food">Food</Option>
+                        <Option value="transport">Transport</Option>
+                        <Option value="shopping">Shopping</Option>
+                    </Select>
+                </Form.Item>
+
+                <Form.Item
+                    label={
+                        <span style={{ color: token.colorText }}>
+                            Payment Mode
+                        </span>
+                    }
+                    name="mode"
+                    rules={[
+                        {
+                            required: true,
+                            message: "Please select payment mode!",
+                        },
+                    ]}
+                >
+                    <Select>
+                        <Option value="cash">Cash</Option>
+                        <Option value="upi">UPI</Option>
+                        <Option value="card">Card</Option>
+                        <Option value="netbanking">Net Banking</Option>
+                    </Select>
+                </Form.Item>
+
+                <Form.Item
+                    label={
+                        <span style={{ color: token.colorText }}>Account</span>
+                    }
+                    name="account"
+                    rules={[
+                        { required: true, message: "Please select account!" },
+                    ]}
+                >
+                    <Select>
+                        <Option value="savings">Savings Account</Option>
+                        <Option value="checking">Checking Account</Option>
+                        <Option value="cash">Cash Account</Option>
+                    </Select>
+                </Form.Item>
+
+                <Form.Item
+                    wrapperCol={{ offset: 6, span: 12 }}
+                    style={{ marginTop: 50 }}
+                ></Form.Item>
             </Form>
         </Modal>
     );

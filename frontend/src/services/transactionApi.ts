@@ -1,5 +1,18 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
+export interface Transaction {
+    id: number;
+    account: string;
+    category: string;
+    sub_category: string;
+    credit: number;
+    debit: number;
+    date: Date;
+    detail_description: string;
+    description: string;
+    mode: string;
+}
+
 export const transactionApi = createApi({
     reducerPath: "transactionApi",
     baseQuery: fetchBaseQuery({
@@ -30,9 +43,10 @@ export const transactionApi = createApi({
 
         // PATCH api's
         updateTransaction: builder.mutation({
-            query: (transaction_id) => ({
-                url: `transaction/${transaction_id}`,
-                method: "UPDATE",
+            query: (transaction_object: Transaction) => ({
+                url: `transaction`,
+                method: "PATCH",
+                body: transaction_object,
             }),
         }),
     }),

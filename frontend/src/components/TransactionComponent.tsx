@@ -1,5 +1,6 @@
 import React from "react";
 import dayjs from "dayjs";
+import type { DatePickerProps } from "antd";
 import {
     Form,
     Input,
@@ -17,7 +18,8 @@ import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 
 import {
     useGetTransactionsQuery,
-    useCreateTransactionMutation,
+    // useCreateTransactionMutation,
+    useUpdateTransactionMutation,
 } from "../services/transactionApi";
 
 const { Option } = Select;
@@ -81,7 +83,12 @@ const TransactionComponent: React.FC = () => {
         React.useState<Transaction>();
 
     const { data: transactionData } = useGetTransactionsQuery({});
-    const [createTransaction] = useCreateTransactionMutation();
+    // const [createTransaction] = useCreateTransactionMutation();
+    const [updateTransaction] = useUpdateTransactionMutation();
+
+    const onDateChange: DatePickerProps["onChange"] = (date, dateString) => {
+        console.log(date, dateString);
+    };
 
     const onSubmit = (values: Transaction) => {
         const formattedValues = {
@@ -93,7 +100,17 @@ const TransactionComponent: React.FC = () => {
 
     // FIXME: Add logic to update transaction
     const handleOk = () => {
-        createTransaction();
+        const values = form.getFieldsValue();
+        const formattedValues = {
+            ...values,
+        };
+        console.log("Transaction form values:", formattedValues);
+        updateTransaction(formattedValues)
+            .unwrap()
+            .then(() => {
+                setIsEditModalVisible(false);
+                form.resetFields();
+            });
     };
 
     // Code for new account creation
@@ -134,7 +151,11 @@ const TransactionComponent: React.FC = () => {
                     rules={[{ required: true, message: "Please select date!" }]}
                     initialValue={dayjs()}
                 >
-                    <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
+                    <DatePicker
+                        onChange={onDateChange}
+                        style={{ width: "100%" }}
+                        format="YYYY-MM-DD"
+                    />
                 </Form.Item>
 
                 <Form.Item
@@ -268,32 +289,36 @@ const TransactionComponent: React.FC = () => {
             </Form>
         </div>
     );
+    console.log(selectedTransaction);
 
     const actionColumn = [
         {
             title: "Actions",
             key: "actions",
-            render: (_: unknown, record: Transaction) => (
-                <Space size="middle">
-                    <Button
-                        type="link"
-                        icon={<EditOutlined />}
-                        onClick={() => {
-                            setSelectedTransaction(record);
-                            setIsEditModalVisible(true);
-                        }}
-                    />
-                    <Button
-                        type="link"
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={() => {
-                            setSelectedTransaction(record);
-                            setIsDeleteModalVisible(true);
-                        }}
-                    />
-                </Space>
-            ),
+            render: (_: unknown, record: Transaction) => {
+                console.log(record, _);
+                return (
+                    <Space size="middle">
+                        <Button
+                            type="link"
+                            icon={<EditOutlined />}
+                            onClick={() => {
+                                setSelectedTransaction(record);
+                                setIsEditModalVisible(true);
+                            }}
+                        />
+                        <Button
+                            type="link"
+                            danger
+                            icon={<DeleteOutlined />}
+                            onClick={() => {
+                                setSelectedTransaction(record);
+                                setIsDeleteModalVisible(true);
+                            }}
+                        />
+                    </Space>
+                );
+            },
         },
     ];
 
@@ -307,7 +332,12 @@ const TransactionComponent: React.FC = () => {
         >
             <Form
                 form={form}
-                initialValues={selectedTransaction as Transaction}
+                initialValues={{
+                    ...selectedTransaction,
+                    date: selectedTransaction?.date
+                        ? dayjs(selectedTransaction.date)
+                        : dayjs(),
+                }}
                 onFinish={() => {
                     // Handle update logic here
                     setIsEditModalVisible(false);
@@ -317,7 +347,6 @@ const TransactionComponent: React.FC = () => {
                     label={<span style={{ color: token.colorText }}>Date</span>}
                     name="date"
                     rules={[{ required: true, message: "Please select date!" }]}
-                    initialValue={dayjs()}
                 >
                     <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
                 </Form.Item>

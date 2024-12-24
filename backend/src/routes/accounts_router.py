@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from typing import List
 from src.helper import AccountHelper
 from src.objects import Account
 from src.database import get_db

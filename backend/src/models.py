@@ -22,7 +22,7 @@ class TransactionModel(Base):
 
     __tablename__ = "transactions"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     date = Column(DateTime, default=datetime.now(), nullable=False)
     description = Column(String, nullable=False)
     detail_description = Column(String, nullable=True)
@@ -55,7 +55,7 @@ class AccountsModel(Base):
 
     __tablename__ = "accounts"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     account_name = Column(String, nullable=False)
     account_type = Column(String, nullable=False)
     account_balance = Column(Float, nullable=False)
@@ -79,7 +79,7 @@ class CategoryModel(Base):
 
     __tablename__ = "categories"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     category_name = Column(String, nullable=False)
 
     sub_categories = relationship("SubCategoryModel", backref="category")
@@ -99,7 +99,7 @@ class SubCategoryModel(Base):
 
     __tablename__ = "sub_categories"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     sub_category_name = Column(String, nullable=False)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
 

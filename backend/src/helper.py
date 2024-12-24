@@ -6,7 +6,6 @@ from src.objects import Transaction, Account, Category, SubCategory
 
 class TransactionHelper:
     def create_transaction(self, transaction: Transaction, db: Session):
-
         try:
             # handle account updation
             handle_accounts_response = self._handle_accounts(
@@ -19,11 +18,6 @@ class TransactionHelper:
             )
 
             if handle_accounts_response:
-                # handle category and sub category creation
-                self._handle_categories_subcategories(
-                    transaction.category, transaction.sub_category, db
-                )
-
                 # handle transaction creation
                 new_transaction = TransactionModel(
                     date=transaction.date,
@@ -57,7 +51,6 @@ class TransactionHelper:
             print(e)
 
     def update_transaction(self, update_transaction: Transaction, db: Session):
-
         try:
             transaction = (
                 db.query(TransactionModel)
@@ -82,7 +75,6 @@ class TransactionHelper:
             print(e)
 
     def delete_transaction(self, transaction_id, db: Session):
-
         try:
             db.query(TransactionModel).filter(
                 TransactionModel.id == transaction_id
@@ -104,34 +96,15 @@ class TransactionHelper:
                     account.account_balance += account_details["credit"]
                 elif account_details["debit"] > 0:
                     account.account_balance -= account_details["debit"]
-                account_helper.update_account(account.id, account, db)
+                account_helper.update_account(account, db)
                 return True
         return False
 
-    def _handle_categories_subcategories(
-        self, category_name, sub_category_name, db: Session
-    ):
-        category_helper = CategoryHelper()
-        sub_category_helper = SubCategoryHelper()
-        categories = [
-            category.category_name for category in category_helper.get_categories(db)
-        ]
-        sub_categories = [
-            subcategory.sub_category_name
-            for subcategory in sub_category_helper.get_sub_categories(db)
-        ]
-        if category_name not in categories:
-            category_helper.create_category(category_name, db)
-        if sub_category_name not in sub_categories:
-            sub_category_helper.create_sub_category(
-                category_name, sub_category_name, db
-            )
-
 
 class CategoryHelper:
-    def create_category(self, category_name: str, db: Session):
+    def create_category(self, category: Category, db: Session):
         try:
-            new_category = CategoryModel(category_name=category_name)
+            new_category = CategoryModel(category_name=category.category_name)
             db.add(new_category)
             db.commit()
             db.refresh(new_category)
@@ -147,13 +120,25 @@ class CategoryHelper:
             db.rollback()
             print(e)
 
+    def get_category_by_id(self, category_id: int, db: Session):
+        try:
+            category = (
+                db.query(CategoryModel).filter(CategoryModel.id == category_id).first()
+            )
+            return category
+        except Exception as e:
+            db.rollback()
+            print(e)
+
     def update_category(self, category_id: int, update_category: Category, db: Session):
         try:
+            print(update_category)
             category = (
                 db.query(CategoryModel).filter(CategoryModel.id == category_id).first()
             )
             category.category_name = update_category.category_name
             db.commit()
+            return {"message": "sucess"}
         except Exception as e:
             db.rollback()
             print(e)
@@ -162,37 +147,41 @@ class CategoryHelper:
         try:
             db.query(CategoryModel).filter(CategoryModel.id == category_id).delete()
             db.commit()
+            return {"message": "deleted"}
         except Exception as e:
             db.rollback()
             print(e)
 
 
 class SubCategoryHelper:
-    def create_sub_category(
-        self, category_name: str, sub_category_name: str, db: Session
-    ):
+    def create_sub_category(self, subcategory: SubCategory, db: Session):
         try:
             category_helper = CategoryHelper()
-            category_id = category_helper.get_categories(db)
-            for category in category_id:
-                if category.category_name == category_name:
+            categories = category_helper.get_categories(db)
+            for category in categories:
+                if category.id == subcategory.category_id:
                     new_sub_category = SubCategoryModel(
-                        sub_category_name=sub_category_name,
+                        sub_category_name=subcategory.sub_category_name,
                         category_id=category.id,
                     )
                     db.add(new_sub_category)
                     db.commit()
                     db.refresh(new_sub_category)
-                else:
-                    category_helper.create_category(category_name, db)
-                    self.create_sub_category(category_name, sub_category_name, db)
+                    return {"message": "created"}
+            return {"message": "No Category ID found"}
         except Exception as e:
             db.rollback()
             print(e)
 
-    def get_sub_categories(self, db: Session):
+    def get_sub_categories(self, db: Session, category_id: Optional[int] = None):
         try:
-            sub_categories = db.query(SubCategoryModel).all()
+            sub_categories = (
+                db.query(SubCategoryModel)
+                .filter(SubCategoryModel.category_id == category_id)
+                .all()
+                if category_id
+                else db.query(SubCategoryModel).all()
+            )
             return sub_categories
         except Exception as e:
             db.rollback()
@@ -274,10 +263,12 @@ class AccountHelper:
             print(e)
             return {"message": f"Account not found. {e}"}
 
-    def update_account(self, account_id: int, update_account: Account, db: Session):
+    def update_account(self, update_account: Account, db: Session):
         try:
             account = (
-                db.query(AccountsModel).filter(AccountsModel.id == account_id).first()
+                db.query(AccountsModel)
+                .filter(AccountsModel.id == update_account.id)
+                .first()
             )
             account.account_name = update_account.account_name.lower()
             account.account_type = update_account.account_type

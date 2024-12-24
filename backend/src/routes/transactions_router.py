@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from src.helper import TransactionHelper
 from src.objects import Transaction
@@ -13,7 +12,8 @@ def get_transaction(db: Session = Depends(get_db)):
     try:
         transaction_helper = TransactionHelper()
         response = transaction_helper.get_transaction(db)
-        return response
+        print(15, response)
+        return response if response else []
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
